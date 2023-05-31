@@ -2,11 +2,9 @@
 
 import argparse
 import os
-from urllib.parse import urlparse
 from rich import print
 from rich.console import Console
 from rich.live import Live
-from rich.progress import Progress
 from rich.table import Table
 from icmplib import ping
 import requests
@@ -21,8 +19,28 @@ def get_ping(server_url: str):
     """
 
     try:
-        response = ping(server_url, count=2, interval=0.3, privileged=False)
-        return [response.avg_rtt, (f"{response.packets_received}" + "/" + f"{response.packets_sent}")]
+        response = ping(server_url, count=2, interval=0.1, timeout=1, privileged=False)
+
+        average = response.avg_rtt
+
+        if float(average) <= 50.0:
+            average = f"[bright_green]{average}[/bright_green]"
+        elif float(average) <= 100.0:
+            average = f"[bright_yellow]{average}[/bright_yellow]"
+        elif float(average) >= 100.0:
+            average = f"[bright_red]{average}[/bright_red]"
+        elif float(average) == 0.0:
+            average = f"[bright_red]{average}[/bright_red]"
+
+        packet_loss = int(response.packets_received)
+        if packet_loss / 2 == 0:
+            packet_loss = f"[bright_red]{packet_loss}/{response.packets_sent}[/bright_red]"
+        elif packet_loss / 2 == 0.5:
+            packet_loss = f"[bright_yellow]{packet_loss}/{response.packets_sent}[/bright_yellow]"
+        elif packet_loss / 2 == 1:
+            packet_loss = f"[bright_green]{packet_loss}/{response.packets_sent}[/bright_green]"
+
+        return [average, packet_loss]
     except requests.exceptions.RequestException:
         return [None, None]
 
@@ -37,7 +55,16 @@ def get_http(server_url):
 
     try:
         response = requests.get(f"https://{server_url}", timeout=1)
-        return response.status_code
+        http = response.status_code
+
+        if http in [200, 201, 204, 206]:
+            http = f"[bright_green]{http}[/bright_green]"
+        elif http in [400, 401, 403, 405, 408, 429]:
+            http = f"[bright_yellow]{http}[/bright_yellow]"
+        elif http in [404, 500, 502, 503, 504, 509]:
+            http = f"[bright_red]{http}[/bright_red]"
+
+        return http
     except requests.exceptions.RequestException:
         return None
 
@@ -51,18 +78,18 @@ def monitor(file):
         servers = f.read().splitlines()
 
     if os.stat(file).st_size == 0:
-        print(":warning:", "[bold red]No servers found in hosts.txt[/bold red]")
+        print(":warning:", "[bold red]No servers found in hosts.txt."
+                           "Please add servers line by line[/bold red]")
         return
 
-    table = Table(title="CLI Status", show_header=True, header_style="bold green")
-    table.add_column("🌐 Hostname", justify="center", style="cyan", width=30)
-    table.add_column("📶 Ping", justify="center", style="green", width=12)
-    table.add_column("📉 Result", justify="center", style="red", width=12)
-    table.add_column("🕸️ HTTP", justify="center", style="yellow", width=12)
+    table = Table(title="CLI Status", show_header=True, header_style="blue")
+    table.add_column("🌐 Hostname", justify="center", style="cyan", width=24)
+    table.add_column("📶 Ping", justify="center", width=12)
+    table.add_column("📉 Result", justify="center", width=12)
+    table.add_column("🕸 HTTP", justify="center", width=12)
 
     with Live(table, refresh_per_second=4, console=console):
         for server in servers:
-            # add async support
             latency = get_ping(server)
             http = get_http(server)
 
@@ -74,7 +101,10 @@ def monitor(file):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="cli status v1")
+    """
+    Main function to parse arguments and call the monitor function
+    """
+    parser = argparse.ArgumentParser(description="cli status")
     parser.add_argument("-f", "--file", help="Path to the hostname file")
 
     args = parser.parse_args()
@@ -84,3 +114,4 @@ def main():
 if __name__ == "__main__":
     console = Console()
     main()
+    
