@@ -1,11 +1,11 @@
 import argparse
 import os
-import time
 from urllib.parse import urlparse
 from rich import print
 from rich.console import Console
+from rich.live import Live
+from rich.progress import Progress
 from rich.table import Table
-from rich.progress import progress
 from icmplib import ping
 import requests
 
@@ -23,11 +23,8 @@ def get_ping(server_url: str):
         return None, None
 
     try:
-        response = ping(server_url, count=4, interval=1, privileged=False)
-        if response.is_alive:
-            return response.avg_rtt, response.packet_loss
-        else:
-            return None, None
+        response = ping(server_url, count=2, interval=0.3, privileged=False)
+        return response.avg_rtt, response.packet_loss
     except requests.exceptions.RequestException:
         return None, None
 
@@ -69,18 +66,17 @@ def monitor(file):
     table.add_column("📉 Packet Loss", justify="center", style="red", width=12)
     table.add_column("🕸️ HTTP", justify="center", style="yellow", width=12)
     
-    for server in servers:
-        # add async support
-        latency = get_ping(server)
-        http = get_http(server)
+    with Live(table, refresh_per_second=2, console=console):
+        for server in servers:
+            # add async support
+            latency = get_ping(server)
+            http = get_http(server)
 
-        ping_val = str(latency['ping']) + " ms" if 'ping' in latency and latency['ping'] else "Error"
-        packet_loss = str(latency['packet_loss']) + "%" if 'packet_loss' in latency and latency['packet_loss'] else "Error"
-        status_code = str(http) if http is not None else "Error"
+            ping_val = latency[0] + " ms" if 'ping' in latency and latency[0] else "Error"
+            packet_loss = latency[1] + "%" if 'packet_loss' in latency and latency[1] else "Error"
+            status_code = str(http) if http is not None else "Error"
 
-        table.add_row(server, ping_val, packet_loss, status_code)
-
-        console.print(table)
+            table.add_row(server, ping_val, packet_loss, status_code)
 
 def main():
     parser = argparse.ArgumentParser(description="cli status v1")
