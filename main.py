@@ -121,6 +121,8 @@ def monitor(servers, count, interval, timeout, cooldown):
                 status_code = row[3]
                 timer_start = row[4]
 
+                # TODO: start the cooldown after all servers have been pinged
+
                 elapsed_time = time.time() - timer_start
                 remaining_time = max(cooldown - elapsed_time, 0)
                 remaining_text = f"{int(remaining_time)}s" if remaining_time > 0 else \
