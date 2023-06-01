@@ -22,7 +22,7 @@ from icmplib.exceptions import NameLookupError, TimeoutExceeded
 import requests
 
 
-def get_ping(server_url: str, count=2, interval=0.1, timeout=1):
+def get_ping(server_url: str, count, interval, timeout):
     """
     Get the ping of a server; supported hostname formats: IPv4, IPv6, FQDN (domain)
 
@@ -86,7 +86,7 @@ def get_http(server_url):
         return None
 
 
-def monitor(servers):
+def monitor(servers, count, interval, timeout, cooldown):
     """
     Monitor the status of multiple servers
 
@@ -122,7 +122,7 @@ def monitor(servers):
                 timer_start = row[4]
 
                 elapsed_time = time.time() - timer_start
-                remaining_time = max(15 - elapsed_time, 0)
+                remaining_time = max(cooldown - elapsed_time, 0)
                 remaining_text = f"{int(remaining_time)}s" if remaining_time > 0 else \
                     Spinner("dots")
 
@@ -130,9 +130,9 @@ def monitor(servers):
 
             live.update(new_table)
 
-            if elapsed_time >= 15:
+            if elapsed_time >= cooldown:
                 for i, server in enumerate(servers):
-                    latency = get_ping(server)
+                    latency = get_ping(server, count, interval, timeout)
                     http = get_http(server)
 
                     ping_val = f"{latency[0]} ms" if latency and latency[0] else "Error" if latency else "Processing"
@@ -154,6 +154,10 @@ def main():
     # You can choose any file you want to monitor.
     group.add_argument("-f", "--file", help="Path to the hostname file")
     group.add_argument("-s", "--server", nargs="+", help="Hostname to monitor")
+    group.add_argument("-c", "--count", help="Number of pings to send", default=2)
+    group.add_argument("-i", "--interval", help="Interval between pings", default=0.1)
+    group.add_argument("-t", "--timeout", help="Timeout for each ping", default=1)
+    group.add_argument("-d", "--cooldown", help="Cooldown between each update", default=5)
 
     args = parser.parse_args()
 
@@ -167,7 +171,8 @@ def main():
     elif args.server:
         servers = args.server
 
-    monitor(servers)
+    monitor(servers, count=args.count, interval=args.interval, timeout=args.timeout,
+            cooldown=args.cooldown)
 
 
 if __name__ == "__main__":
