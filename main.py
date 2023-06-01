@@ -1,11 +1,21 @@
+"""
+cli-status: developed by @epiclyblu
+
+A dynamically rendering CLI tool to monitor the status of multiple servers from 
+either a file or a list of servers provided by yourself.
+"""
+
 # python main.py -f hosts.txt
 # python main.py -s google.com cloudflare.com 1.1.1.1
 
 import argparse
 import os
+import time
+
 from rich import print
 from rich.console import Console
 from rich.live import Live
+from rich.spinner import Spinner
 from rich.table import Table
 from icmplib import ping
 from icmplib.exceptions import NameLookupError, TimeoutExceeded
@@ -17,13 +27,14 @@ def get_ping(server_url: str, count=2, interval=0.1, timeout=1):
     Get the ping of a server; supported hostname formats: IPv4, IPv6, FQDN (domain)
 
     Arguments: server_url: str
-
+    Returns: ping (float), packet_loss (float)
     """
 
     try:
-        response = ping(server_url, count=count, interval=interval, timeout=timeout, privileged=False)
+        response = ping(server_url, count=count, interval=interval, timeout=timeout, 
+                        privileged=False)
 
-        average = response.avg_rtt
+        average = response.avg_rtt.__round__(1)
 
         if float(average) <= 50.0:
             average = f"[bright_green]{average}[/bright_green]"
@@ -78,24 +89,59 @@ def get_http(server_url):
 def monitor(servers):
     """
     Monitor the status of multiple servers
+
+    Arguments: servers (list)
+    Outputs: table (rich.Table)
     """
 
     table = Table(title="Host Status", show_header=True, header_style="blue")
     table.add_column("🌐 Hostname", justify="center", style="cyan", width=24)
     table.add_column("📶 Ping", justify="center", width=12)
     table.add_column("📉 Result", justify="center", width=12)
-    table.add_column("⛵ HTTP", justify="center", width=12)
+    table.add_column("⛵ HTTP", justify="center", width=18)
 
-    with Live(table, refresh_per_second=4, console=console):
+    with Live(table, refresh_per_second=1) as live:
+        rows = []
+
         for server in servers:
-            latency = get_ping(server)
-            http = get_http(server)
+            rows.append([server, Spinner("dots"), Spinner("dots"), Spinner("dots"), 0])
 
-            ping_val = f"{latency[0]}" + " ms" if f"{latency[0]}" else "Error"
-            packet_loss = f"{latency[1]}" if f"{latency[1]}" else "Error"
-            status_code = str(http) if http is not None else "Error"
+        while True:
+            new_table = Table(title="Host Status", show_header=True, header_style="blue")
+            new_table.add_column("🌐 Hostname", justify="center", style="cyan", width=24)
+            new_table.add_column("📶 Ping", justify="center", width=12)
+            new_table.add_column("📉 Result", justify="center", width=12)
+            new_table.add_column("⛵ HTTP", justify="center", width=12)
+            new_table.add_column("❄️ Next Update", justify="center", width=18)
 
-            table.add_row(server, ping_val, packet_loss, status_code)
+            for row in rows:
+                hostname = row[0]
+                ping_val = row[1]
+                packet_loss = row[2]
+                status_code = row[3]
+                timer_start = row[4]
+
+                elapsed_time = time.time() - timer_start
+                remaining_time = max(15 - elapsed_time, 0)
+                remaining_text = f"{int(remaining_time)}s" if remaining_time > 0 else \
+                    Spinner("dots")
+
+                new_table.add_row(hostname, ping_val, packet_loss, status_code, remaining_text)
+
+            live.update(new_table)
+
+            if elapsed_time >= 15:
+                for i, server in enumerate(servers):
+                    latency = get_ping(server)
+                    http = get_http(server)
+
+                    ping_val = f"{latency[0]} ms" if latency and latency[0] else "Error" if latency else "Processing"
+                    packet_loss = f"{latency[1]}" if latency and latency[1] else "Error" if latency else "Processing"
+                    status_code = str(http) if http else "Error"
+                    rows[i][1] = ping_val
+                    rows[i][2] = packet_loss
+                    rows[i][3] = status_code
+                    rows[i][4] = time.time()
 
 
 def main():
@@ -105,10 +151,10 @@ def main():
     parser = argparse.ArgumentParser(description="cli status")
     group = parser.add_mutually_exclusive_group(required=True)
 
+    # You can choose any file you want to monitor.
     group.add_argument("-f", "--file", help="Path to the hostname file")
     group.add_argument("-s", "--server", nargs="+", help="Hostname to monitor")
 
-    # You can choose any file you want to monitor.
     args = parser.parse_args()
 
     if args.file:
@@ -116,7 +162,7 @@ def main():
             servers = f.read().splitlines()
         if os.stat(args.file).st_size == 0:
             print(":warning: ", "[bold red]No servers found in hosts.txt. "
-                            "Please add servers line by line[/bold red]")
+                                "Please add servers line by line[/bold red]")
             return
     elif args.server:
         servers = args.server
@@ -127,4 +173,3 @@ def main():
 if __name__ == "__main__":
     console = Console()
     main()
-    

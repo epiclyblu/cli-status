@@ -2,10 +2,9 @@
 # 🕸️cli-status
 cli-status is a Python command line app to get the ping, packet loss, and HTTP response code of a host in the terminal.
 
-#### NOTE: This app does not render dynamically, therefore it may look laggy when the table renders.
-
 ### Notes
 - Uses the **rich** module for generating the table and the color coding in the terminal
+- Updates **dynamically**; get updates in real time
 - Color coded latency, packet loss, and HTTP response codes
 
 ### Instructions
@@ -31,6 +30,7 @@ or
 python main.py -s cloudflare.com google.com 1.1.1.1
 ```
 
+<<<<<<< HEAD
 3) Wait for the table to generate; at the end, you should see a table with the ping and other stats
 
 ### To-do
@@ -39,3 +39,11 @@ python main.py -s cloudflare.com google.com 1.1.1.1
 - Auto-save settings
 - Save statistics to a different file
 - Command line arguments for packet count, timeouts, etc. (you can modify the code as you wish for now)
+=======
+3) The table generates in real-time; thanks to the magic of Rich
+
+### To-do
+- Auto-save settings
+- Save statistics to a different file
+- Command line arguments for packet count, timeouts, etc.
+>>>>>>> 2fb230f (Add dynamically rendering table, cooldown)
