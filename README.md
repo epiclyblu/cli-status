@@ -1,16 +1,27 @@
-# cli-status
-Get the status, latency, and HTTP response codes of multiple hosts in the terminal.
 
-### How to use
-1) Add hosts you would like to get the status of in any .txt file (do not add http:// or https://, this will be already added in the requests)
-2) Then, run the script with argument -f or --file with the name of the text file (hosts.txt in this example)
-3) The table will generate however pretty slowly.
+# 🕸️cli-status
+cli-status is a Python command line app to get the ping, packet loss, and HTTP response code of a host in the terminal.
 
-### Sidenotes
-- This is pretty buggy, the table generates slow and it isn't dynamic
-- It is hardcoded to ping the hosts 2 times, and when calculating packet loss it only divides by 2
+#### NOTE: This app does not render dynamically, therefore it may look laggy when the table renders.
 
-### To-do
-- Dynamic updating table
-- Try to always run this in the background
-- More statistics
+### Notes
+- Uses the **rich** module for generating the table and the color coding in the terminal
+- Color coded latency, packet loss, and HTTP response codes
+
+### Instructions
+
+1) Add hosts to a .txt file; a file named hosts.txt is already provided for you
+
+#### hosts.txt
+```
+google.com
+1.1.1.1
+8.8.8.8
+```
+
+2) Run the script in your terminal
+```
+python main.py -f {FILE}.txt
+```
+
+3) Wait for the table to generate; at the end, you should see a table with the ping and other stats
