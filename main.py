@@ -1,4 +1,5 @@
 # python main.py -f hosts.txt
+# python main.py -s google.com cloudflare.com 1.1.1.1
 
 import argparse
 import os
@@ -69,24 +70,16 @@ def get_http(server_url):
         return None
 
 
-def monitor(file):
+def monitor(servers):
     """
     Monitor the status of multiple servers
     """
 
-    with open(file, encoding="utf-8") as f:
-        servers = f.read().splitlines()
-
-    if os.stat(file).st_size == 0:
-        print(":warning:", "[bold red]No servers found in hosts.txt."
-                           "Please add servers line by line[/bold red]")
-        return
-
-    table = Table(title="CLI Status", show_header=True, header_style="blue")
+    table = Table(title="Host Status", show_header=True, header_style="blue")
     table.add_column("🌐 Hostname", justify="center", style="cyan", width=24)
     table.add_column("📶 Ping", justify="center", width=12)
     table.add_column("📉 Result", justify="center", width=12)
-    table.add_column("🕸 HTTP", justify="center", width=12)
+    table.add_column("⛵ HTTP", justify="center", width=12)
 
     with Live(table, refresh_per_second=4, console=console):
         for server in servers:
@@ -105,10 +98,24 @@ def main():
     Main function to parse arguments and call the monitor function
     """
     parser = argparse.ArgumentParser(description="cli status")
-    parser.add_argument("-f", "--file", help="Path to the hostname file")
+    group = parser.add_mutually_exclusive_group(required=True)
 
+    group.add_argument("-f", "--file", help="Path to the hostname file")
+    group.add_argument("-s", "--server", nargs="+", help="Hostname to monitor")
+
+    # You can choose any file you want to monitor.
     args = parser.parse_args()
-    monitor(args.file)
+
+    if args.file:
+        with open(args.file, encoding="utf-8") as f:
+            servers = f.read().splitlines()
+        if os.stat(args.file).st_size == 0:
+            print(":warning:", "[bold red]No servers found in hosts.txt."
+                            "Please add servers line by line[/bold red]")
+            return
+    elif args.server:
+        servers = args.server
+    monitor(servers)
 
 
 if __name__ == "__main__":
