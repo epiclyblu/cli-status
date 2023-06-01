@@ -33,8 +33,5 @@ python main.py -s cloudflare.com google.com 1.1.1.1
 3) Wait for the table to generate; at the end, you should see a table with the ping and other stats
 
 ### To-do
-- Add dynamic animations so the table updates in real time
-- Add functionality to always run the table, even in the background
 - Auto-save settings
-- Save statistics to a different file
-- Command line arguments for packet count, timeouts, etc. (you can modify the code as you wish for now)
+- Command line arguments for packet count, timeouts, etc.
