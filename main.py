@@ -1,7 +1,7 @@
 """
 cli-status: developed by @epiclyblu
 
-A dynamically rendering CLI tool to monitor the status of multiple servers from 
+A dynamically rendering CLI tool to monitor the status of multiple servers from
 either a file or a list of servers provided by yourself.
 """
 
@@ -31,7 +31,7 @@ def get_ping(server_url: str, count, interval, timeout):
     """
 
     try:
-        response = ping(server_url, count=count, interval=interval, timeout=timeout, 
+        response = ping(server_url, count=count, interval=interval, timeout=timeout,
                         privileged=False)
 
         average = response.avg_rtt.__round__(1)
@@ -98,7 +98,7 @@ def monitor(servers, count, interval, timeout, cooldown):
     table.add_column("🌐 Hostname", justify="center", style="cyan", width=24)
     table.add_column("📶 Ping", justify="center", width=12)
     table.add_column("📉 Result", justify="center", width=12)
-    table.add_column("⛵ HTTP", justify="center", width=18)
+    table.add_column("⛵ HTTP", justify="center", width=12)
 
     with Live(table, refresh_per_second=1) as live:
         rows = []
@@ -121,30 +121,30 @@ def monitor(servers, count, interval, timeout, cooldown):
                 status_code = row[3]
                 timer_start = row[4]
 
-                # TODO: start the cooldown after all servers have been pinged
-
                 elapsed_time = time.time() - timer_start
                 remaining_time = max(cooldown - elapsed_time, 0)
-                remaining_text = f"{int(remaining_time)}s" if remaining_time > 0 else \
-                    Spinner("dots")
+                remaining_text = f"{int(remaining_time)}s" if remaining_time > 0 else Spinner("dots")
 
                 new_table.add_row(hostname, ping_val, packet_loss, status_code, remaining_text)
 
             live.update(new_table)
 
-            if elapsed_time >= cooldown:
-                for i, server in enumerate(servers):
+            if all(time.time() - row[4] >= cooldown for row in rows):
+                for row in rows:
+                    server = row[0]
+                    i = rows.index(row)
+
                     latency = get_ping(server, count, interval, timeout)
                     http = get_http(server)
 
                     ping_val = f"{latency[0]} ms" if latency and latency[0] else "Error" if latency else "Processing"
                     packet_loss = f"{latency[1]}" if latency and latency[1] else "Error" if latency else "Processing"
                     status_code = str(http) if http else "Error"
-                    rows[i][1] = ping_val
-                    rows[i][2] = packet_loss
-                    rows[i][3] = status_code
-                    rows[i][4] = time.time()
 
+                    row[1] = ping_val
+                    row[2] = packet_loss
+                    row[3] = status_code
+                    row[4] = time.time()
 
 def main():
     """
@@ -156,10 +156,10 @@ def main():
     # You can choose any file you want to monitor.
     group.add_argument("-f", "--file", help="Path to the hostname file")
     group.add_argument("-s", "--server", nargs="+", help="Hostname to monitor")
-    group.add_argument("-c", "--count", help="Number of pings to send", default=2)
-    group.add_argument("-i", "--interval", help="Interval between pings", default=0.1)
-    group.add_argument("-t", "--timeout", help="Timeout for each ping", default=1)
-    group.add_argument("-d", "--cooldown", help="Cooldown between each update", default=5)
+    parser.add_argument("-c", "--count", help="Number of pings to send", default=2)
+    parser.add_argument("-i", "--interval", help="Interval between pings", default=0.1)
+    parser.add_argument("-t", "--timeout", help="Timeout for each ping", default=1)
+    parser.add_argument("-d", "--cooldown", help="Cooldown between each update", default=15)
 
     args = parser.parse_args()
 
