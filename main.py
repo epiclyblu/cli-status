@@ -8,10 +8,11 @@ from rich.console import Console
 from rich.live import Live
 from rich.table import Table
 from icmplib import ping
+from icmplib.exceptions import NameLookupError, TimeoutExceeded
 import requests
 
 
-def get_ping(server_url: str):
+def get_ping(server_url: str, count=2, interval=0.1, timeout=1):
     """
     Get the ping of a server; supported hostname formats: IPv4, IPv6, FQDN (domain)
 
@@ -20,7 +21,7 @@ def get_ping(server_url: str):
     """
 
     try:
-        response = ping(server_url, count=2, interval=0.1, timeout=1, privileged=False)
+        response = ping(server_url, count=count, interval=interval, timeout=timeout, privileged=False)
 
         average = response.avg_rtt
 
@@ -42,6 +43,10 @@ def get_ping(server_url: str):
             packet_loss = f"[bright_green]{packet_loss}/{response.packets_sent}[/bright_green]"
 
         return [average, packet_loss]
+    except NameLookupError:
+        return [None, None]
+    except TimeoutExceeded:
+        return [None, None]
     except requests.exceptions.RequestException:
         return [None, None]
 
@@ -110,11 +115,12 @@ def main():
         with open(args.file, encoding="utf-8") as f:
             servers = f.read().splitlines()
         if os.stat(args.file).st_size == 0:
-            print(":warning:", "[bold red]No servers found in hosts.txt."
+            print(":warning: ", "[bold red]No servers found in hosts.txt. "
                             "Please add servers line by line[/bold red]")
             return
     elif args.server:
         servers = args.server
+
     monitor(servers)
 
 
