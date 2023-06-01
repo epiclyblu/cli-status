@@ -20,7 +20,7 @@ cli-status is a Python command line app to get the ping, packet loss, and HTTP r
   8.8.8.8
   ```
 
-  - Or, specify the hosts you would like to ping in your command line argument using -s
+ - Or, specify the hosts you would like to ping in your command line argument using -s
 
 2) Run the script in your terminal
 ```
