@@ -37,10 +37,14 @@ python main.py -s cloudflare.com google.com 1.1.1.1
 
 ### Either one of these arguments are required
 **-f** or **--file** - The path to the hostname file
+
 **-s** or **--server** - Names of the servers to monitor (space in between each server)
 
 ### Optional
 **-c** or **--count** - The number of packets to send
+
 **-i** or **-interval** - The interval between each packet being sent - keep this low (0.1)
+
 **-t** or **--timeout** - The maximum timeout for one packet (1000ms = 1000)
+
 **-d** or **--cooldown** - The cooldown between every update
