@@ -30,7 +30,6 @@ or
 python main.py -s cloudflare.com google.com 1.1.1.1
 ```
 
-<<<<<<< HEAD
 3) Wait for the table to generate; at the end, you should see a table with the ping and other stats
 
 ### To-do
@@ -39,11 +38,3 @@ python main.py -s cloudflare.com google.com 1.1.1.1
 - Auto-save settings
 - Save statistics to a different file
 - Command line arguments for packet count, timeouts, etc. (you can modify the code as you wish for now)
-=======
-3) The table generates in real-time; thanks to the magic of Rich
-
-### To-do
-- Auto-save settings
-- Save statistics to a different file
-- Command line arguments for packet count, timeouts, etc.
->>>>>>> 2fb230f (Add dynamically rendering table, cooldown)
