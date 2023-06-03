@@ -127,11 +127,11 @@ def monitor(servers, count, interval, timeout, cooldown):
     """
 
     table = Table(title="Host Status", show_header=True, header_style="blue")
-    table.add_column("🌐 Hostname", justify="center", style="cyan", width=24)
-    table.add_column("📶 Ping", justify="center", width=12)
-    table.add_column("📉 Result", justify="center", width=12)
-    table.add_column("⛵ HTTP", justify="center", width=12)
-    table.add_column("❄ Next Update", justify="center", width=18)
+    table.add_column("Hostname", justify="center", style="bright_cyan")
+    table.add_column("Ping", justify="center", width=12)
+    table.add_column("Result", justify="center", width=12)
+    table.add_column("HTTP", justify="center", width=12)
+    table.add_column("Next Update", justify="center", width=18)
 
     with Live(table, refresh_per_second=1) as live:
         rows = []
@@ -147,7 +147,7 @@ def monitor(servers, count, interval, timeout, cooldown):
 
         while any(t.is_alive() for t in threads):
             new_table = Table(title="Host Status", show_header=True, header_style="blue")
-            new_table.add_column("Hostname", justify="center", style="bright_cyan", width=24)
+            new_table.add_column("Hostname", justify="center", style="bright_cyan")
             new_table.add_column("Ping", justify="center", width=12)
             new_table.add_column("Result", justify="center", width=12)
             new_table.add_column("HTTP", justify="center", width=12)
