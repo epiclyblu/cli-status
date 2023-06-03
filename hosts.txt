@@ -1,4 +1,11 @@
-1.1.1.1
-google.com
-github.com
-singapore.com.sg
+speedtest.london.linode.com
+speedtest.toronto1.linode.com
+speedtest.newark.linode.com
+speedtest.atlanta.linode.com
+speedtest.dallas.linode.com
+speedtest.fremont.linode.com
+speedtest.syd1.linode.com
+speedtest.mumbai1.linode.com
+speedtest.tokyo2.linode.com
+speedtest.singapore.linode.com
+speedtest.frankfurt.linode.com

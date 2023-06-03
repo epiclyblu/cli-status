@@ -8,6 +8,7 @@ either a file or a list of servers provided by yourself.
 # python main.py -f hosts.txt
 # python main.py -s google.com cloudflare.com 1.1.1.1
 
+from threading import Thread
 import argparse
 import os
 import time
@@ -86,6 +87,37 @@ def get_http(server_url):
         return None
 
 
+def monitor_server(row, count, interval, timeout, cooldown):
+    """
+    Asynchronous function to monitor servers
+
+    Arguments: server (list)
+    Outputs: to the table in the monitor() function
+    """
+
+    server = row[0]
+    timer_start = row[4]
+
+    while True:
+        elapsed_time = time.time() - timer_start
+        remaining_time = max(cooldown - elapsed_time, 0)
+
+        if remaining_time <= 0:
+            latency = get_ping(server, count, interval, timeout)
+            http = get_http(server)
+
+            ping_val = f"{latency[0]} ms" if latency and latency[0] else "Error" if latency else "Processing"
+            packet_loss = f"{latency[1]}" if latency and latency[1] else "Error" if latency else "Processing"
+            status_code = str(http) if http else "Error"
+
+            row[1] = ping_val
+            row[2] = packet_loss
+            row[3] = status_code
+            row[4] = time.time()
+
+        time.sleep(cooldown)
+
+
 def monitor(servers, count, interval, timeout, cooldown):
     """
     Monitor the status of multiple servers
@@ -107,9 +139,15 @@ def monitor(servers, count, interval, timeout, cooldown):
         for server in servers:
             rows.append([server, Spinner("dots"), Spinner("dots"), Spinner("dots"), 0])
 
-        while True:
+        threads = []
+        for row in rows:
+            t = Thread(target=monitor_server, args=(row, count, interval, timeout, cooldown))
+            threads.append(t)
+            t.start()
+
+        while any(t.is_alive() for t in threads):
             new_table = Table(title="Host Status", show_header=True, header_style="blue")
-            new_table.add_column("Hostname", justify="center", style="cyan", width=24)
+            new_table.add_column("Hostname", justify="center", style="bright_cyan", width=24)
             new_table.add_column("Ping", justify="center", width=12)
             new_table.add_column("Result", justify="center", width=12)
             new_table.add_column("HTTP", justify="center", width=12)
@@ -129,23 +167,8 @@ def monitor(servers, count, interval, timeout, cooldown):
                 new_table.add_row(hostname, ping_val, packet_loss, status_code, remaining_text)
 
             live.update(new_table)
+            time.sleep(0.1)
 
-            if all(time.time() - row[4] >= cooldown for row in rows):
-                for row in rows:
-                    server = row[0]
-                    i = rows.index(row)
-
-                    latency = get_ping(server, count, interval, timeout)
-                    http = get_http(server)
-
-                    ping_val = f"{latency[0]} ms" if latency and latency[0] else "Error" if latency else "Processing"
-                    packet_loss = f"{latency[1]}" if latency and latency[1] else "Error" if latency else "Processing"
-                    status_code = str(http) if http else "Error"
-
-                    row[1] = ping_val
-                    row[2] = packet_loss
-                    row[3] = status_code
-                    row[4] = time.time()
 
 def main():
     """

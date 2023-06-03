@@ -5,6 +5,7 @@ cli-status is a Python command line app to get the ping, packet loss, and HTTP r
 ### Notes
 - Uses the **rich** module for generating the table and the color coding in the terminal
 - Updates **dynamically**; get updates in real time
+- Updates **asynchronously**; ping all of your servers with speed
 - Choose everything: the ping timeouts, intervals, and packets, as well as the cooldown
 - Color coded latency, packet loss, and HTTP response codes
 
