@@ -197,8 +197,11 @@ def main():
     elif args.server:
         servers = args.server
 
-    monitor(servers, count=args.count, interval=args.interval, timeout=args.timeout,
-            cooldown=args.cooldown)
+    try:
+        monitor(servers, count=args.count, interval=args.interval, timeout=args.timeout,
+                cooldown=args.cooldown)
+    except KeyboardInterrupt:
+        exit(0)
 
 
 if __name__ == "__main__":
