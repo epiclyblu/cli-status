@@ -9,3 +9,4 @@ speedtest.mumbai1.linode.com
 speedtest.tokyo2.linode.com
 speedtest.singapore.linode.com
 speedtest.frankfurt.linode.com
+invalid-url-name-for-testing

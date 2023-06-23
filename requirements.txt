@@ -1,14 +1,13 @@
 certifi==2023.5.7
 charset-normalizer==3.1.0
+decorator==5.1.1
 icmplib==3.0.3
 idna==3.4
 markdown-it-py==2.2.0
 mdurl==0.1.2
 ping3==4.0.4
-pip==22.3.1
 Pygments==2.15.1
 requests==2.31.0
 rich==13.3.5
-setuptools==65.5.1
 urllib3==2.0.2
-wheel==0.38.4
+validators==0.20.0

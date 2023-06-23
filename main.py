@@ -21,6 +21,20 @@ from rich.table import Table
 from icmplib import ping
 from icmplib.exceptions import NameLookupError, TimeoutExceeded
 import requests
+from validators import domain, ipv4, ipv6
+
+
+def is_valid_server(server_url):
+    """
+    Check if the server URL can be validated - whether a domain, IPv4 or IPv6 address
+
+    Arguments: server_url (str)
+    Returns: valid (bool)
+    """
+    if domain(server_url) or ipv4(server_url) or ipv6(server_url):
+        return True
+    else:
+        return False
 
 
 def get_ping(server_url: str, count, interval, timeout):
@@ -103,8 +117,12 @@ def monitor_server(row, count, interval, timeout, cooldown):
         remaining_time = max(cooldown - elapsed_time, 0)
 
         if remaining_time <= 0:
-            latency = get_ping(server, count, interval, timeout)
-            http = get_http(server)
+            if is_valid_server(server):
+                latency = get_ping(server, count, interval, timeout)
+                http = get_http(server)
+            else:
+                latency = [None, None]
+                http = None
 
             ping_val = f"{latency[0]} ms" if latency and latency[0] else "Error" if latency else "Processing"
             packet_loss = f"{latency[1]}" if latency and latency[1] else "Error" if latency else "Processing"
@@ -188,6 +206,9 @@ def main():
     args = parser.parse_args()
 
     if args.file:
+        if FileNotFoundError:
+            print(":warning: ", "[bold red]Invalid file name or file extension, please check again![/bold red]")
+            return
         with open(args.file, encoding="utf-8") as f:
             servers = f.read().splitlines()
         if os.stat(args.file).st_size == 0:
@@ -197,11 +218,8 @@ def main():
     elif args.server:
         servers = args.server
 
-    try:
-        monitor(servers, count=args.count, interval=args.interval, timeout=args.timeout,
-                cooldown=args.cooldown)
-    except KeyboardInterrupt:
-        exit(0)
+    monitor(servers, count=args.count, interval=args.interval, timeout=args.timeout,
+            cooldown=args.cooldown)
 
 
 if __name__ == "__main__":
