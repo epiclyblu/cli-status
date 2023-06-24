@@ -206,7 +206,7 @@ def main():
     args = parser.parse_args()
 
     if args.file:
-        if FileNotFoundError:
+        if FileNotFoundError is True:
             print(":warning: ", "[bold red]Invalid file name or file extension, please check again![/bold red]")
             return
         with open(args.file, encoding="utf-8") as f:
